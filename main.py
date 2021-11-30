@@ -97,7 +97,7 @@ while user_input.lower().strip() != "view":
 
         # Remembering the field the user would like to see
         fields_of_interest.append(user_input)
-        print("Great! We'll keep that in mind.")
+        print("\nGreat! I'll keep that in mind.")
 
     # Displaying all of the possible ticket fields on request (user types "fields")
     elif user_input == "fields":
@@ -131,6 +131,10 @@ for ticket in ticket_list_JSON:
     new_created_at = ticket["created_at"].replace("T", " at ").replace("Z", " ")
     new_updated_at = ticket["created_at"].replace("T", " at ").replace("Z", " ")
 
+    # Removing the whitespace from the description
+    nws_description = ticket["description"][0 : 30].split()
+    nws_description = " ".join(nws_description)
+
     # Instantiating a new ticket based on the properties of the JSON ticket
     t = Ticket(
 
@@ -138,7 +142,7 @@ for ticket in ticket_list_JSON:
         ticket["id"],
         ticket["type"],
         ticket["status"],
-        ticket["description"],
+        nws_description,
         new_created_at,
         new_updated_at,
         None
@@ -157,4 +161,29 @@ for ticket in ticket_list_JSON:
 
 # DISPLAYING THE TICKET DATA FOR THE USER
 
-# print(tabulate(ticket_objects))
+# Intializing variables to be used in printing tickets
+count = 1
+attribute_matrix = []
+
+# Setting the headers of the table
+table_headers = ["Ticket ID", "Ticket Type", "Ticket Status", "Description", "Created at:", "Updated at:"]
+print("\n")
+
+for ticket in ticket_objects:
+
+    # Storing a list of the attributes of each ticket in a larger list for tabulation
+    attribute_matrix.append(ticket.get_ticket_attributes_list())
+
+    # Adding one to the count, with the intent to stop at 25 so only 25 tickets are displayed
+    count += 1
+
+    # If 25 tickets have been displayed
+    if count % 25 == 0:
+
+        # Abstracting the tabulation of the ticket data using Python's tabulate library and resetting the list
+        print(tabulate(attribute_matrix, table_headers, tablefmt = "github"))
+        attribute_matrix = []
+
+        # Getting input from the user to see if they would like to see more tickets
+        user_input = input("\nType \"n\" to see the next 25 tickets.\n")
+
