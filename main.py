@@ -15,20 +15,8 @@
 
 
 
-# Importing the necessary libraries to make a sucsessful request
-import requests
-from requests.auth import HTTPBasicAuth
-
-# Importing the necessary libraries to process the request data
-import json
-
-# Importing a custom ticket class
-from ticket import Ticket
-
-# Importing a library which helps to format tables
-from tabulate import tabulate
-
-
+# Importing the functions necessary to make the program work from funcs.py
+from funcs import *
 
 # GETTING USER PREFERENCES
 
@@ -36,34 +24,6 @@ from tabulate import tabulate
 print("\nHello! How are you? Don't bother answering that, I'm a computer." \
     + "\nI'm here to help you view the tickets related to your Zendesk account!" \
     + "\nWe make use of Zendesk's RESTful API which requires authetication on your end, so we'll need some of your information to get started.")
-
-# Requesting the users Zendesk account data until authentication to Zendesk's API is granted
-user_authenticated = False
-while not user_authenticated:
-
-    user_subdomain =    input("\nPlease enter your personal Zendesk subdomain (it should look like https://\"\{subdomain\}\".zendesk.com): ")
-    user_email =        input("Now, the email related to your Zendesk account: ")
-    user_pass =         input("Finally, your password (I'll keep it secret): ")
-    user_url = "https://" + user_subdomain.strip() + ".zendesk.com/api/v2/tickets.json"
-
-    print("\nGetting your data now...")
-
-    # Using Python's requests and HTTPBasicAuth library to abstract the HTTP request from Zendesk's API using basic authentication
-    response = requests.get(user_url, auth = HTTPBasicAuth(user_email, user_pass.strip()))
-
-    # Printing the arror
-    if response.status_code != 200:
-        print("\nOur program was unable to authenticate you, or Zendesk's API is unavailable." \
-            + "\nDouble check your email and password, that's most likely the issue." \
-            + "\nIf this error persists, reach out to us at becha9260@gmail.com, and we'll help fix the problem." + "\n")
-
-    # The user was sucsessfully authenticated
-    else:
-
-        # Congradulating the user on a sucsessful authenrication
-        print("\nNice! Zendesk has given us the go ahead to display your data for you.")
-        user_authenticated = True
-
 
 # Storing all possible fields of a ticket as it's related to an account, as specified by Zendesk's API documentation
 ticket_fields = ["allow_attachments",   "allow_channelback",    "assignee_email",   "assignee_id",      "attribute_value_ids",  "brand_id",                 \
@@ -76,24 +36,33 @@ ticket_fields = ["allow_attachments",   "allow_channelback",    "assignee_email"
                 "type",                 "updated_at",           "updated_stamp",    "url",              "via",                  "via_followup_source_id",   \
                 "via_id",               "voice_comment"]
 
-# Using Python's json library to abstract the parsing of the response text to JSON
+# Authenticating the user and requesting data from Zendesks API
+authenticated   = False
+response        = None
+while not authenticated:
+    authenticated, response = try_authentication()
+
+# Using Python's JSON library to abstract the parsing of the response text to JSON
 response_JSON = json.loads(response.text)
 
 # Checking to see what ticket properties the user is interested in
 user_input = ""
 fields_of_interest = []
 
-# Loopinig until the user requests to view tickets
+# Getting the users input
+valid_inputs = ["fields", "view", ticket_fields]
+question = "\nIs there any specific ticket data you're interested in seeing?"                   \
+         + "\n\nType \"fields\" to see a list of possible fields and data related to tickets."  \
+         + "\nType \"view\" to view your tickets."
+
+# Looping until the user requests to view tickets
 while user_input.lower().strip() != "view":
 
-    # Getting the users input
-    user_input = input("\nIs there any specific ticket data you're interested in seeing?                    \
-                        \n\nType \"fields\" to see a list of possible fields and data related to tickets.   \
-                        \nType \"view\" to view your tickets."                                              \
-                        ).lower().strip()
+    # Getting the users preferences
+    user_input = get_user_pref(valid_inputs, question)
 
     # Checking to see if the requested field is valid
-    if user_input in ticket_fields:
+    if user_input in valid_inputs[2]:
 
         # Remembering the field the user would like to see
         fields_of_interest.append(user_input)
@@ -109,81 +78,25 @@ while user_input.lower().strip() != "view":
         print("\n")
 
 
-    # Handling invalid inputs
-    elif user_input != "view":
-
-        print("The input is not a ticket field, or an invalid input.")
-
-
 
 # PROCESSING TICKET DATA BASED ON USER PREFERENCES
 
-# Getting a list of all of the tickets from the JSON object that was returned
+# Getting the JSONN data
 ticket_list_JSON = response_JSON["tickets"]
 
-# Creating a second list which will hold ticket objects, as defined by the Ticket class in ticket.py
-ticket_objects = []
-
-# Looping through the tickets in the JSON object
-for ticket in ticket_list_JSON:
-
-    # Making the created_at and updated_at fields easier to read
-    new_created_at = ticket["created_at"].replace("T", " at ").replace("Z", " ")
-    new_updated_at = ticket["created_at"].replace("T", " at ").replace("Z", " ")
-
-    # Removing the whitespace from the description
-    nws_description = ticket["description"][0 : 30].split()
-    nws_description = " ".join(nws_description)
-
-    # Instantiating a new ticket based on the properties of the JSON ticket
-    t = Ticket(
-
-        # Setting all of the properties of the ticket based on the JSON ticket
-        ticket["id"],
-        ticket["type"],
-        ticket["status"],
-        nws_description,
-        new_created_at,
-        new_updated_at,
-        None
-    )
-
-    # Adding any addtional fields specified by the user
-    for interest in fields_of_interest:
-
-        # Storing the field name and it's data in a dictionary related to the Ticket object
-        t.custom_fields.update({interest : ticket[interest]})
-
-    # Appending the Ticket object to the list of ticket objects
-    ticket_objects.append(t)
+# Creating ticket data from the JSON returned by Zendesk's API
+ticket_objects = create_tickets(ticket_list_JSON, fields_of_interest)
 
 
 
 # DISPLAYING THE TICKET DATA FOR THE USER
 
-# Intializing variables to be used in printing tickets
-count = 1
+# Creating an iterable of ticket attribute lists
 attribute_matrix = []
-
-# Setting the headers of the table
-table_headers = ["Ticket ID", "Ticket Type", "Ticket Status", "Description", "Created at:", "Updated at:"]
-print("\n")
-
 for ticket in ticket_objects:
 
     # Storing a list of the attributes of each ticket in a larger list for tabulation
     attribute_matrix.append(ticket.get_ticket_attributes_list())
 
-    # Adding one to the count, with the intent to stop at 25 so only 25 tickets are displayed
-    count += 1
-
-    # If 25 tickets have been displayed
-    if count % 25 == 0:
-
-        # Abstracting the tabulation of the ticket data using Python's tabulate library and resetting the list
-        print(tabulate(attribute_matrix, table_headers, tablefmt = "github"))
-        attribute_matrix = []
-
-        # Getting input from the user to see if they would like to see more tickets
-        user_input = input("\nType \"n\" to see the next 25 tickets.\n")
-
+# Displaying the tickets
+display_tickets(attribute_matrix)

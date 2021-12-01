@@ -2,7 +2,6 @@
 class Ticket:
 
 
-
     # Defining the properties of a ticket
     def __init__(self, id, type, status, description, created_at, updated_at, custom_fields):
 
@@ -17,14 +16,39 @@ class Ticket:
 
 
     # Printing a simplified version of the data contained within a ticket
-    def print_minimized_ticket(self):
+    def print_ticket(self):
+        
+        # Storing the additional fields in a variable
+        custom_fields_str = ""
+        for attribute in self.custom_fields:
+            custom_fields_str += attribute, ":\n",                      \
+                                 "---------------\n",                   \
+                                 self.custom_fields[attribute], "\n"
 
-        print(self.id,          "\t\t",     \
-              self.type,        "\t\t",     \
-              self.status,      "\t\t",     \
-              self.description, "...\t\t",  \
-              self.created_at,  "\t\t",     \
-              self.updated_at)
+        print("Ticket id:\n",             
+              "---------------\n",      
+              self.id,                  
+              "\n",
+              "Ticket type:\n",
+              "---------------\n",
+              self.type,
+              "\n",
+              "Ticket status:\n",
+              "---------------\n",
+              self.status,
+              "\n",
+              "Ticket description:\n",
+              "---------------\n",
+              self.description,
+              "\n",
+              "Created at:\n",
+              "---------------\n",
+              self.created_at,
+              "\n",
+              "Updated at:\n",
+              "---------------\n",
+              self.updated_at,        
+              )
 
 
 
