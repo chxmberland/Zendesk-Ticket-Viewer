@@ -20,34 +20,41 @@ class Ticket:
         
         # Storing the additional fields in a variable
         custom_fields_str = ""
-        for attribute in self.custom_fields:
-            custom_fields_str += attribute, ":\n",                      \
-                                 "---------------\n",                   \
-                                 self.custom_fields[attribute], "\n"
+        for attribute, value in self.custom_fields.items():
+            custom_fields_str += attribute + ":\n" +    \
+                                 "---------------\n" +  \
+                                 str(value) +           \
+                                 "\n\n\n"
 
-        print("Ticket id:\n",             
+        print("\n\nTicket id:\n",             
               "---------------\n",      
               self.id,                  
-              "\n",
+              "\n\n\n",
               "Ticket type:\n",
               "---------------\n",
               self.type,
-              "\n",
+              "\n\n\n",
               "Ticket status:\n",
               "---------------\n",
               self.status,
-              "\n",
+              "\n\n\n",
               "Ticket description:\n",
               "---------------\n",
               self.description,
-              "\n",
+              "\n\n\n",
               "Created at:\n",
               "---------------\n",
               self.created_at,
-              "\n",
+              "\n\n\n",
               "Updated at:\n",
               "---------------\n",
-              self.updated_at,        
+              self.updated_at, 
+              "\n\n\n",
+              "---------------\n",
+              "Custom Fields: \n",
+              "---------------\n\n",
+              self.custom_fields,
+              "\n\n" 
               )
 
 
@@ -60,8 +67,12 @@ class Ticket:
         # Looping through each attritbute and it's related vale of a Ticket using Python's inbuilt __dict__ method
         for attribute, value in self.__dict__.items():
 
+            # Handling null values
+            if value == None:
+                attribute_list.append("No value!")
+
             # Taking only the first 30 characters of the description to simplify the viewing (more availble on user request)
-            if attribute == "description":
+            elif attribute == "description":
                 attribute_list.append(value[0 : 30] + "...")
             
             # If the current attribute is not the description or custom_fields (printed later)

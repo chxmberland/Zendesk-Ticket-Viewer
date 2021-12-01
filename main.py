@@ -7,16 +7,13 @@
 #       This program will use Zendesk's RESTful API to GET ticket data from someones Zendesk account. 
 #       It will then process that data and display it in a clean and convenient manner in the shell.
 #
-#   References:
-#
-#       GET ticket URL: https://{subdomain}.zendesk.com/api/v2/tickets.json
-#       GET ticket cURL: curl https://{subdomain}.zendesk.com/api/v2/tickets.json \ -v -u {email}:{password}
-#
 
 
 
 # Importing the functions necessary to make the program work from funcs.py
 from funcs import *
+
+
 
 # GETTING USER PREFERENCES
 
@@ -40,7 +37,12 @@ ticket_fields = ["allow_attachments",   "allow_channelback",    "assignee_email"
 authenticated   = False
 response        = None
 while not authenticated:
-    authenticated, response = try_authentication()
+
+    user_subdomain =    input("\nPlease enter your personal Zendesk subdomain (it should look like https://\{subdomain\}.zendesk.com): ")
+    user_email =        input("Now, the email related to your Zendesk account: ")
+    user_pass =         input("Finally, your password (I'll keep it secret): ")
+
+    authenticated, response = try_authentication(user_subdomain, user_email, user_pass)
 
 # Using Python's JSON library to abstract the parsing of the response text to JSON
 response_JSON = json.loads(response.text)
@@ -50,7 +52,12 @@ user_input = ""
 fields_of_interest = []
 
 # Getting the users input
-valid_inputs = ["fields", "view", ticket_fields]
+valid_inputs = ["fields", "view"]                                                                                                                         \
+
+# Adding all ticket fields as a valid input
+for field in ticket_fields:
+    valid_inputs.append(field)
+
 question = "\nIs there any specific ticket data you're interested in seeing?"                   \
          + "\n\nType \"fields\" to see a list of possible fields and data related to tickets."  \
          + "\nType \"view\" to view your tickets."
@@ -62,7 +69,7 @@ while user_input.lower().strip() != "view":
     user_input = get_user_pref(valid_inputs, question)
 
     # Checking to see if the requested field is valid
-    if user_input in valid_inputs[2]:
+    if user_input in ticket_fields:
 
         # Remembering the field the user would like to see
         fields_of_interest.append(user_input)
@@ -99,4 +106,4 @@ for ticket in ticket_objects:
     attribute_matrix.append(ticket.get_ticket_attributes_list())
 
 # Displaying the tickets
-display_tickets(attribute_matrix)
+display_tickets(attribute_matrix, ticket_objects)

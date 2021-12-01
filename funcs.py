@@ -14,15 +14,21 @@ from tabulate import tabulate
 
 
 # Creating a function which tries to authenticate the user
-def try_authentication():
+def try_authentication(user_subdomain, user_email, user_pass):
 
-    # Getting the users data
-    user_subdomain =    input("\nPlease enter your personal Zendesk subdomain (it should look like https://\{subdomain\}.zendesk.com): ")
-    user_email =        input("Now, the email related to your Zendesk account: ")
-    user_pass =         input("Finally, your password (I'll keep it secret): ")
+    # Dealing with bad input
+    null_input = None
+    if null_input in [user_subdomain, user_email, user_pass]:
+        return False, None
 
+    # Dealing with bad input
+    for arg in locals():
+        print("here")
+        if arg == None:
+            arg = ""
+
+    # Creating the users URL to make a sucsessful API request
     user_url = "https://" + user_subdomain.strip() + ".zendesk.com/api/v2/tickets.json"
-
 
     print("\nGetting your data now...")
 
@@ -108,7 +114,14 @@ def create_tickets(ticket_list_JSON, fields_of_interest):
 
 
 # Creating a function which displays tickets
-def display_tickets(attribute_matrix):
+def display_tickets(attribute_matrix, ticket_objects):
+
+    # Handling bad input
+    if attribute_matrix == None or ticket_objects == None \
+       or 0 in [len(attribute_matrix), len(ticket_objects)]:
+
+        print("There are no tickets related to your account.")
+        return False
 
     # Setting the headers of the table
     table_headers = ["Ticket ID", "Ticket Type", "Ticket Status", "Description", "Created at:", "Updated at:"]
@@ -142,3 +155,27 @@ def display_tickets(attribute_matrix):
             count = 0
         elif user_input == "n" and (count + 1) * 25 > len(attribute_matrix):
             count -= 1
+        
+        # The user has requested to view an id of a specific ticket
+        elif user_input == "id":
+
+            # Getting the id of the specific ticket you're looking for
+            valid_inputs = []
+
+            # Changing the numbers to strings
+            counter = 0
+            while counter < len(ticket_objects):
+                valid_inputs.append(str(counter))
+                counter += 1
+
+            # Preparing to get input from the user
+            question = "\nEnter the id of the ticket you would like to see: "
+            req_id = int(get_user_pref(valid_inputs, question))
+
+            # Getting the specific ticket
+            ticket_objects[int(req_id) - 1].print_ticket()
+
+            count -= 1
+
+    print("\n\nThank you for using my program.")
+    return True
