@@ -16,27 +16,24 @@ from tabulate import tabulate
 # Creating a function which tries to authenticate the user
 def try_authentication(user_subdomain, user_email, user_pass):
 
-    # Dealing with bad input
-    null_input = None
-    if null_input in [user_subdomain, user_email, user_pass]:
-        return False, None
+    # Handling invalid inputs
+    bad_input = False
+    if None in [user_subdomain, user_email, user_pass]:
+        bad_input = True
 
-    # Dealing with bad input
-    for arg in locals():
-        print("here")
-        if arg == None:
-            arg = ""
+    # Making sure input is valid before performing an expensive operation
+    if not bad_input:
 
-    # Creating the users URL to make a sucsessful API request
-    user_url = "https://" + user_subdomain.strip() + ".zendesk.com/api/v2/tickets.json"
+        # Creating the users URL to make a sucsessful API request
+        user_url = "https://" + user_subdomain.strip() + ".zendesk.com/api/v2/tickets.json"
 
-    print("\nGetting your data now...")
+        print("\nGetting your data now...")
 
-    # Using Python's requests and HTTPBasicAuth library to abstract the HTTP request from Zendesk's API using basic authentication
-    response = requests.get(user_url, auth = HTTPBasicAuth(user_email, user_pass.strip()))
+        # Using Python's requests and HTTPBasicAuth library to abstract the HTTP request from Zendesk's API using basic authentication
+        response = requests.get(user_url, auth = HTTPBasicAuth(user_email, user_pass.strip()))
 
     # The user was not authenticated
-    if response.status_code != 200:
+    if bad_input or response.status_code != 200:
 
         print("\nOur program was unable to authenticate you, or Zendesk's API is unavailable." \
             + "\nDouble check your email and password, that's most likely the issue." \
@@ -83,7 +80,7 @@ def create_tickets(ticket_list_JSON, fields_of_interest):
         new_updated_at = ticket["created_at"].replace("T", " at ").replace("Z", " ")
 
         # Removing the whitespace from the description
-        nws_description = ticket["description"][0 : 30].split()
+        nws_description = ticket["description"].split()
         nws_description = " ".join(nws_description)
 
         # Instantiating a new ticket based on the properties of the JSON ticket
@@ -103,7 +100,10 @@ def create_tickets(ticket_list_JSON, fields_of_interest):
         for interest in fields_of_interest:
 
             # Storing the field name and it's data in a dictionary related to the Ticket object
-            t.custom_fields.update({interest : ticket[interest]})
+            if interest in ticket:
+                t.custom_fields.update({interest : ticket[interest]})
+            else: 
+                t.custom_fields.update({interest : "No value was given by the API."})
 
         # Appending the Ticket object to the list of ticket objects
         ticket_objects.append(t)

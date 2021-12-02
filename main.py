@@ -15,7 +15,13 @@ from funcs import *
 
 
 
-# GETTING USER PREFERENCES
+#######################################################################
+#                                                                     #  
+#               Step 1: Getting the users preferences                 #
+#                                                                     #
+#######################################################################
+
+
 
 # Greeting the user
 print("\nHello! How are you? Don't bother answering that, I'm a computer." \
@@ -36,9 +42,11 @@ ticket_fields = ["allow_attachments",   "allow_channelback",    "assignee_email"
 # Authenticating the user and requesting data from Zendesks API
 authenticated   = False
 response        = None
+
+# Repeatedly requesting the users data
 while not authenticated:
 
-    user_subdomain =    input("\nPlease enter your personal Zendesk subdomain (it should look like https://\{subdomain\}.zendesk.com): ")
+    user_subdomain =    input("\nPlease enter your personal Zendesk subdomain (it should look like https://YOUR_SUBDOMAIN.zendesk.com) only enter YOUR_SUBDOMAIN: ")
     user_email =        input("Now, the email related to your Zendesk account: ")
     user_pass =         input("Finally, your password (I'll keep it secret): ")
 
@@ -58,8 +66,8 @@ valid_inputs = ["fields", "view"]                                               
 for field in ticket_fields:
     valid_inputs.append(field)
 
-question = "\nIs there any specific ticket data you're interested in seeing?"                   \
-         + "\n\nType \"fields\" to see a list of possible fields and data related to tickets."  \
+question = "\nIs there any specific ticket data you're interested in seeing? Enter them now and we'll keep track." \
+         + "\n\nType \"fields\" to see a list of possible fields related to tickets."  \
          + "\nType \"view\" to view your tickets."
 
 # Looping until the user requests to view tickets
@@ -86,7 +94,13 @@ while user_input.lower().strip() != "view":
 
 
 
-# PROCESSING TICKET DATA BASED ON USER PREFERENCES
+#######################################################################
+#                                                                     #  
+#      Step 2: Processing ticket data based on user preferences       #
+#                                                                     #
+#######################################################################
+
+
 
 # Getting the JSONN data
 ticket_list_JSON = response_JSON["tickets"]
@@ -96,7 +110,13 @@ ticket_objects = create_tickets(ticket_list_JSON, fields_of_interest)
 
 
 
-# DISPLAYING THE TICKET DATA FOR THE USER
+#######################################################################
+#                                                                     #  
+#            Step 3: Displaying ticket data for the user              #
+#                                                                     #
+#######################################################################
+
+
 
 # Creating an iterable of ticket attribute lists
 attribute_matrix = []

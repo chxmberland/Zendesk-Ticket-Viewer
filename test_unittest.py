@@ -9,6 +9,7 @@ import unittest
 
 
 
+# Testing the authenticate function
 class Test_Auth(unittest.TestCase):
 
     # Testing invalid inputs
@@ -41,6 +42,7 @@ class Test_Auth(unittest.TestCase):
 
 
 
+# Testing the function that displays the tickets for the user in the shell
 class Test_Display_Tickets(unittest.TestCase):
 
     # Testing invalid inputs
@@ -71,6 +73,7 @@ class Test_Display_Tickets(unittest.TestCase):
 
 
 
+# Testing the general flexibility of Ticket objects
 class Test_Ticket_Objects(unittest.TestCase):
 
     def test_null_attributes(self):
@@ -90,7 +93,6 @@ class Test_Ticket_Objects(unittest.TestCase):
 
         # Should just be a list of null values
         self.assertEqual(attributes, ["No value!", "No value!", "No value!", "No value!", "No value!", "No value!"])
-
 
 
 
