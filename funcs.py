@@ -19,7 +19,10 @@ def try_authentication(user_subdomain, user_email, user_pass):
     # Handling invalid inputs
     bad_input = False
     if None in [user_subdomain, user_email, user_pass]:
-        bad_input = True
+        
+        print("The input is invalid, either your subdomain, email or password was\n \
+               null, meaning we can't make the request.")
+        return False, None
 
     # Making sure input is valid before performing an expensive operation
     if not bad_input:
@@ -32,20 +35,42 @@ def try_authentication(user_subdomain, user_email, user_pass):
         # Using Python's requests and HTTPBasicAuth library to abstract the HTTP request from Zendesk's API using basic authentication
         response = requests.get(user_url, auth = HTTPBasicAuth(user_email, user_pass.strip()))
 
-    # The user was not authenticated
-    if bad_input or response.status_code != 200:
+    # Dealing with common RESTful API errors
+    errors = {
 
-        print("\nOur program was unable to authenticate you, or Zendesk's API is unavailable." \
-            + "\nDouble check your email and password, that's most likely the issue." \
-            + "\nIf this error persists, reach out to us at becha9260@gmail.com, and we'll help fix the problem." + "\n")
-        return False, None
+        401 : "\nZendesk's API was contacted, but it seems as though your username or password is incorrect. A typo, perhaps?",
+        
+        403 : "\nWe found your account with Zendesk, but it seems like you don't have acsess to their API.\n \
+               Unfortunately, we can't help you view your tickets until your Zendesk account has acsess to the API.",
 
-    # The user was sucsessfully authenticated
-    else:
+        404 : "\nWe couldn't find your Zendesk domain, you likely made a typo, or ther server is down.",
+
+        408 : "\nThe request timed out, the server might be experiencing high traffic.",
+        
+        429 : "\nYou've made too many requests too quickly, give the server a second or so to recover."
+
+    }
+
+    # The user was authenticated and the data has been retrieved
+    if response.status_code == 200:
 
         # Congradulating the user on a sucsessful authenrication
         print("\nNice! Zendesk has given us the go ahead to display your data for you.")
         return True, response
+
+    # Checking to see if there was some error that I've created a custom message for
+    elif response.status_code in list(errors.keys()):
+
+        print(errors[response.status_code])
+        return False, None
+
+    # Some other error occured
+    else:
+
+        print("There seems to be some sort of issue. If this issue persists, contact me at lemurwebsites@gmail.com.\n \
+               Make the subject line \"ERROR 901 Zendesk\" and I'll try and help!")
+
+        
 
 
 
@@ -117,8 +142,7 @@ def create_tickets(ticket_list_JSON, fields_of_interest):
 def display_tickets(attribute_matrix, ticket_objects):
 
     # Handling bad input
-    if attribute_matrix == None or ticket_objects == None \
-       or 0 in [len(attribute_matrix), len(ticket_objects)]:
+    if (attribute_matrix == None or ticket_objects == None) or (0 in [len(attribute_matrix), len(ticket_objects)]):
 
         print("There are no tickets related to your account.")
         return False
@@ -128,23 +152,32 @@ def display_tickets(attribute_matrix, ticket_objects):
     print("\n")
 
     # Displaying the tickets accoring to the user
-    count, user_input = 0, ""
+    count = 0
+    user_input = ""
+    display_next = True
     while user_input != "done":
 
-        # Adding to the count
-        count += 1
+        # This gateway prevents tickets from displaying directly after the user requests a specific ticket
+        if display_next:
 
-        # Abstracting the tabulation of the ticket data using Python's tabulate library
-        print(tabulate(attribute_matrix[(count * 25) - 25 : count * 25],    \
-                       table_headers,                              \
-                       tablefmt = "github"))
+            # Adding to the count
+            count += 1
+
+            # Abstracting the tabulation of the ticket data using Python's tabulate library
+            print(tabulate(attribute_matrix[(count * 25) - 25 : count * 25],    \
+                        table_headers,                                          \
+                        tablefmt = "github"))
+        
+        else:
+
+            display_next = True
 
         # Getting the users input
         valid_inputs = ["b", "n", "done", "id"]
         question = "\nHit n to see the next 25 tickets."        \
-                    + "\nHit b see the previous 25 tickets."    \
-                    + "\nType id to see a specific ticket."     \
-                    + "\nType done if you're done."
+                 + "\nHit b see the previous 25 tickets."       \
+                 + "\nType id to see a specific ticket."        \
+                 + "\nType done if you're done."
         
         user_input = get_user_pref(valid_inputs, question)
 
@@ -175,7 +208,8 @@ def display_tickets(attribute_matrix, ticket_objects):
             # Getting the specific ticket
             ticket_objects[int(req_id) - 1].print_ticket()
 
-            count -= 1
+            # Preventing the table from being printed again for the sake of a cleaner UI
+            display_next = False
 
-    print("\n\nThank you for using my program.")
+    print("\n\nThank you for using my program! Have a great day.")
     return True

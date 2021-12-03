@@ -66,9 +66,10 @@ valid_inputs = ["fields", "view"]                                               
 for field in ticket_fields:
     valid_inputs.append(field)
 
+# Formatting the question I will ask the user
 question = "\nIs there any specific ticket data you're interested in seeing? Enter them now and we'll keep track." \
-         + "\n\nType \"fields\" to see a list of possible fields related to tickets."  \
-         + "\nType \"view\" to view your tickets."
+         + "\n\n\tType \"fields\" to see a list of possible fields related to tickets."  \
+         + "\n\tType \"view\" to view your tickets.\n"
 
 # Looping until the user requests to view tickets
 while user_input.lower().strip() != "view":
